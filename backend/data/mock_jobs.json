@@ -1,0 +1,37 @@
+[
+    {
+        "title": "Junior Data Scientist",
+        "company": "TechStream Solutions",
+        "location": "Remote",
+        "link": "https://example.com/job1",
+        "description": "Looking for someone with Python, SQL, and a passion for data."
+    },
+    {
+        "title": "Associate Software Engineer",
+        "company": "Global Systems",
+        "location": "New York, NY",
+        "link": "https://example.com/job2",
+        "description": "Building next-gen financial tools using Python and React."
+    },
+    {
+        "title": "Machine Learning Engineer",
+        "company": "DeepMind AI",
+        "location": "San Francisco, CA",
+        "link": "https://example.com/job3",
+        "description": "Develop and deploy large scale ML models."
+    },
+    {
+        "title": "Data Analyst",
+        "company": "Insight Corp",
+        "location": "Hybrid",
+        "link": "https://example.com/job4",
+        "description": "Analyze market trends and prepare reports for stakeholders."
+    },
+    {
+        "title": "Python Developer",
+        "company": "OpenSource Foundation",
+        "location": "Remote",
+        "link": "https://example.com/job5",
+        "description": "Contribute to open source projects and internal infrastructure."
+    }
+]
