@@ -14,8 +14,15 @@ const authRoutes = require('./routes/auth');
 // Initialize express app
 const app = express();
 
-// Connect to database
-connectDB();
+// Connect to database (only once in serverless environment)
+let isConnected = false;
+
+const connectToDatabase = async () => {
+  if (!isConnected) {
+    await connectDB();
+    isConnected = true;
+  }
+};
 
 // Security middleware
 app.use(helmet({
@@ -45,8 +52,11 @@ app.use(cors({
     'http://192.168.1.9:3003',
     'http://192.168.1.9:3004',
     'http://192.168.1.9:3005',
-    'http://192.168.1.9:3006'
-  ],
+    'http://192.168.1.9:3006',
+    // Vercel deployment
+    'https://*.vercel.app',
+    process.env.FRONTEND_URL
+  ].filter(Boolean), // Filter out undefined values
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -112,7 +122,7 @@ app.use('*', (req, res) => {
 // Global error handler
 app.use((error, req, res, next) => {
   console.error('Global error handler:', error);
-  
+
   // Mongoose validation error
   if (error.name === 'ValidationError') {
     const errors = Object.values(error.errors).map(err => err.message);
@@ -122,7 +132,7 @@ app.use((error, req, res, next) => {
       errors
     });
   }
-  
+
   // Mongoose duplicate key error
   if (error.code === 11000) {
     const field = Object.keys(error.keyValue)[0];
@@ -131,7 +141,7 @@ app.use((error, req, res, next) => {
       message: `${field} already exists`
     });
   }
-  
+
   // Mongoose cast error
   if (error.name === 'CastError') {
     return res.status(400).json({
@@ -139,7 +149,7 @@ app.use((error, req, res, next) => {
       message: 'Invalid ID format'
     });
   }
-  
+
   // Default error
   res.status(error.statusCode || 500).json({
     success: false,
@@ -147,27 +157,5 @@ app.use((error, req, res, next) => {
   });
 });
 
-// Start server
-const PORT = process.env.PORT || 5001;
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Auth Server running on port ${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-});
-
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err, promise) => {
-  console.error('Unhandled Promise Rejection:', err);
-  // Close server & exit process
-  server.close(() => {
-    process.exit(1);
-  });
-});
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
-  process.exit(1);
-});
-
+// Export the Express app for Vercel (serverless function)
 module.exports = app;
