@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import {
   CheckCircle,
@@ -10,20 +10,18 @@ import {
   AlertCircle,
   Play,
   RotateCcw,
-  FileQuestion,
-  Target
+  FileQuestion
 } from 'lucide-react'
 import { generateAssessment, submitAssessment, completeTopic, storeAttempt } from '../services/certificationApi'
 import type { Topic, AssessmentQuestion, AssessmentEvaluation } from '../types/certification'
 
 interface AssessmentModalProps {
-  topic: Topic
   questions: AssessmentQuestion[]
   onSubmit: (answers: string[]) => void
   onClose: () => void
 }
 
-function AssessmentModal({ topic, questions, onSubmit, onClose }: AssessmentModalProps) {
+function AssessmentModal({ questions, onSubmit, onClose }: AssessmentModalProps) {
   const [answers, setAnswers] = useState<string[]>(new Array(questions.length).fill(''))
   const [currentQuestion, setCurrentQuestion] = useState(0)
 

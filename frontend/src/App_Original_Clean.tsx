@@ -8,7 +8,6 @@ import MobileNav from './components/MobileNav'
 import Chat from './components/Chat'
 import WelcomeBanner from './components/WelcomeBanner'
 import RoadmapPage from './pages/RoadmapPage'
-import RoleSpecificRoadmapPage from './pages/RoleSpecificRoadmapPage'
 import JobsPage from './pages/JobsPage'
 import InterviewPage from './pages/InterviewPage'
 
@@ -359,8 +358,6 @@ function App() {
         return <DashboardPage />
       case 'roadmap':
         return <RoadmapPage />
-      case 'roadmap-new':
-        return <RoleSpecificRoadmapPage />
       case 'jobs':
         return <JobsPage />
       case 'interview':
