@@ -1,7 +1,7 @@
 # NovaPivot
 
 A comprehensive, AI-driven platform designed to guide professionals through career transitions. This application leverages the **Amazon Nova LLM** (via an OpenAI-compatible interface) to provide personalized advice, analyze resumes, and simulate interviews.
-
+##Live Demo:  https://nova-pivot-jive.vercel.app/
 ## Features
 
 - **Personalized Career Chat**: Interact with an AI agent that understands your professional background and goals.
