@@ -136,6 +136,7 @@ app.use('/api/auth', authRoutes);
 
 // 404 handler - exclude root route
 app.use((req, res, next) => {
+  console.log('404 handler: path =', req.path, 'method =', req.method);
   if (req.path === '/' && req.method === 'GET') return next();
   res.status(404).json({
     success: false,
@@ -182,4 +183,6 @@ app.use((error, req, res, next) => {
 });
 
 // Export the Express app for Vercel (serverless function)
-module.exports = app;
+module.exports = async (req, res) => {
+  app(req, res);
+};
