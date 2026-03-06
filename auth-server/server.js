@@ -133,8 +133,9 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 
-// 404 handler
-app.use('*', (req, res) => {
+// 404 handler - exclude root route
+app.use((req, res, next) => {
+  if (req.path === '/' && req.method === 'GET') return next();
   res.status(404).json({
     success: false,
     message: `Route ${req.originalUrl} not found`
