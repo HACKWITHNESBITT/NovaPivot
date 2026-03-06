@@ -100,6 +100,7 @@ app.use(cookieParser());
 
 // Root route
 app.get('/', (req, res) => {
+  console.log('Root route accessed');
   res.status(200).json({
     success: true,
     message: 'NovaPivot Auth API Server',
