@@ -1,4 +1,10 @@
+console.log('Starting server.js');
 require('dotenv').config();
+console.log('Loading dotenv');
+
+process.env.JWT_SECRET = 'your-secure-jwt-secret-here';
+process.env.MONGODB_URI = 'mongodb://127.0.0.1:27017/novapivot_auth';
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -14,20 +20,20 @@ const authRoutes = require('./routes/auth');
 // Initialize express app
 const app = express();
 
-// Connect to database (only once in serverless environment)
-let isConnected = false;
+// Connect to database
+console.log('PORT from env:', process.env.PORT);
+const PORT = process.env.PORT || 5002;
+console.log('Final PORT:', PORT);
 
-const connectToDatabase = async () => {
-  if (!isConnected) {
-    await connectDB();
-    isConnected = true;
-  }
-};
+connectDB();
+console.log('MongoDB connection completed');
 
 // Security middleware
+console.log('Setting up middleware');
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
+console.log('After helmet');
 
 // CORS configuration
 app.use(cors({
@@ -35,67 +41,45 @@ app.use(cors({
     'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:3002',
-    'http://localhost:3003',
-    'http://localhost:3004',
-    'http://localhost:3005',
-    'http://localhost:3006',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:3001',
-    'http://127.0.0.1:3002',
-    'http://127.0.0.1:3003',
-    'http://127.0.0.1:3004',
-    'http://127.0.0.1:3005',
-    'http://127.0.0.1:3006',
-    'http://192.168.1.9:3000',
-    'http://192.168.1.9:3001',
-    'http://192.168.1.9:3002',
-    'http://192.168.1.9:3003',
-    'http://192.168.1.9:3004',
-    'http://192.168.1.9:3005',
-    'http://192.168.1.9:3006',
-    // Vercel deployment
-    'https://*.vercel.app',
-    process.env.FRONTEND_URL
-  ].filter(Boolean), // Filter out undefined values
+    'http://localhost:5173',
+    'https://novapivot.vercel.app',
+    'https://nova-pivot.vercel.app',
+    'https://novapivot-career-transition-platform.vercel.app'
+  ].filter(Boolean),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+console.log('After cors');
 
 // Rate limiting
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP to 100 requests per windowMs
-  message: {
-    success: false,
-    message: 'Too many requests from this IP, please try again later.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// const limiter = rateLimit({
+//   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
+//   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP to 100 requests per windowMs
+//   message: 'Too many requests from this IP, please try again later.',
+//   standardHeaders: true,
+//   legacyHeaders: false,
+// });
 
-// Apply rate limiting to all requests
-app.use('/api/', limiter);
+// // Apply rate limiting to all requests
+// app.use('/api/', limiter);
 
-// Stricter rate limiting for auth endpoints
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 requests per windowMs
-  message: {
-    success: false,
-    message: 'Too many authentication attempts, please try again later.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// // Stricter rate limiting for auth endpoints
+// const authLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 5, // limit each IP to 5 requests per windowMs
+//   message: 'Too many authentication attempts, please try again later.',
+//   standardHeaders: true,
+//   legacyHeaders: false,
+// });
 
-// Apply stricter rate limiting to auth routes
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
+// // Apply stricter rate limiting to auth routes
+// app.use('/api/auth/login', authLimiter);
+// app.use('/api/auth/register', authLimiter);
 
 // Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: 10 * 1024 * 1024 }));
+app.use(express.urlencoded({ extended: true, limit: 10 * 1024 * 1024 }));
 app.use(cookieParser());
 
 // Root route
@@ -182,7 +166,28 @@ app.use((error, req, res, next) => {
   });
 });
 
-// Export the Express app for Vercel (serverless function)
-module.exports = async (req, res) => {
-  app(req, res);
-};
+// Start server
+console.log('Starting server on port', PORT);
+const server = app.listen(PORT, () => {
+  console.log(`🚀 Auth Server running on port ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📊 Health check: http://localhost:${PORT}/health`);
+}).on('error', (err) => {
+  console.error('Server listen error:', err);
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err, promise) => {
+  console.error('Unhandled Promise Rejection:', err);
+  // Close server & exit process
+  server.close(() => {
+    process.exit(1);
+  });
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
+});
