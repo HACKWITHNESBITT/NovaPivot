@@ -28,7 +28,6 @@ function Sidebar({ collapsed }: SidebarProps) {
     { id: 'assessment', label: 'Assessment', icon: ClipboardList },
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'roadmap', label: 'Roadmap', icon: Map },
-    { id: 'roadmap-new', label: 'New Roadmap', icon: Map },
     { id: 'jobs', label: 'Jobs', icon: Briefcase },
     { id: 'interview', label: 'Interview', icon: MessageSquare },
   ]
