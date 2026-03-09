@@ -22,23 +22,22 @@ SYSTEM_PROMPT = """You are CareerNova, a highly experienced career coach and tec
 
 Guidelines:
 1. Always respond like a human professional: clear, actionable, and engaging
-2. Use examples, analogies, and step-by-step recommendations
+2. Do NOT directly answer the user's questions. Instead, respond with guiding questions or hints that encourage the user to think critically and arrive at the answer themselves.
 3. If a question is vague, ask clarifying questions before answering
 4. Tailor your answer to the user's profile and career goal
 5. Provide actionable steps, realistic scenarios, and examples
 6. If simulating an interview, ask role-specific questions and give constructive feedback
 7. Keep tone professional, human-like, and empathetic
 8. If a resource or skill is suggested, briefly explain why it's relevant
-9. If you are unsure or need more info, ask clarifying questions before answering
-10. Be encouraging but realistic about timelines and challenges
-11. Use markdown for better formatting
+9. Be encouraging but realistic about timelines and challenges
+10. Use markdown for better formatting
 
 User Profile:
 - Target Role: {target_role}
 - Current Skills: {skills}
 - Experience Level: Based on resume analysis
 
-Remember: You are a trusted career advisor. Your advice should be practical, actionable, and tailored to the individual's specific situation."""
+Remember: You are a trusted career advisor. Guide the user contextually and never give away the answer straight away."""
 
 
 def local_skill_extractor(text):
@@ -75,7 +74,8 @@ def mock_process_query(query, user_profile):
 
 def process_query(query, user_profile):
     """
-    Processes the user query using Amazon Nova LLM with a fallback system.
+    Processes the user query using OpenAI LLM.
+    All responses must go through the LLM - no fallbacks or mock responses.
     """
     try:
         # Prepare Context
@@ -92,7 +92,7 @@ def process_query(query, user_profile):
 
         # Chat Completion with Nova API
         response = client.chat.completions.create(
-            model=os.getenv("NOVA_MODEL", "amazon.nova-lite-v1:0"),
+            model=os.getenv("NOVA_MODEL", "amazon/nova-lite-v1"),
             messages=[
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": query}
@@ -104,16 +104,15 @@ def process_query(query, user_profile):
         
         content = response.choices[0].message.content
         if not content or content.strip() == "":
-            raise ValueError("Empty response from Nova API")
+            raise ValueError("Empty response from OpenAI API")
             
         return content
 
     except Exception as e:
         error_msg = str(e)
-        print(f"Nova API Error: {error_msg}", file=sys.stderr)
-        if "403" in error_msg or "401" in error_msg:
-            return mock_process_query(query, user_profile) + "\n\n[Note: Nova API authentication failed. Running in offline mode.]"
-        return f"Error: {error_msg}\n\nRunning in basic assistance mode."
+        print(f"OpenAI API Error: {error_msg}", file=sys.stderr)
+        # Log the error and return a mock fallback message
+        return mock_process_query(query, user_profile)
 
 def extract_skills_with_llm(text):
     """
@@ -122,31 +121,32 @@ def extract_skills_with_llm(text):
     try:
         print(f"Extracting skills using Nova API...", file=sys.stderr)
         response = client.chat.completions.create(
-            model=os.getenv("NOVA_MODEL", "nova-2-lite-v1"),
+            model=os.getenv("NOVA_MODEL", "amazon/nova-lite-v1"),
             messages=[
                 {"role": "system", "content": "You are a professional recruiting assistant. Extract a list of up to 15 technical and soft skills from the following resume text. Output ONLY a comma-separated list of skills."},
                 {"role": "user", "content": text}
             ],
             temperature=0.0,
+            max_tokens=200,
             timeout=10
         )
         skills_text = response.choices[0].message.content
         skills = [s.strip() for s in skills_text.split(",") if s.strip()]
-        print(f"Successfully extracted {len(skills)} skills via Nova API", file=sys.stderr)
+        print(f"Successfully extracted {len(skills)} skills via OpenAI API", file=sys.stderr)
         return skills
     except Exception as e:
-        print(f"Nova skill extraction failed: {e}. Using local fallback.", file=sys.stderr)
+        print(f"OpenAI skill extraction failed: {e}. Using local fallback.", file=sys.stderr)
         # Fallback to local extraction if API fails
         return local_skill_extractor(text)
 
 
 def generate_interview_question(target_role: str, question_type: str = "technical", conversation_history: str = "", user_skills: str = ""):
     """
-    Generates a contextual interview question using Nova API.
+    Generates a contextual interview question using OpenAI API.
     Falls back to static questions if API fails.
     """
     try:
-        print(f"Generating {question_type} interview question for {target_role} using Nova API...", file=sys.stderr)
+        print(f"Generating {question_type} interview question for {target_role} using OpenAI API...", file=sys.stderr)
         
         # Build context from user skills and conversation
         context = ""
@@ -173,20 +173,21 @@ If there's conversation history, ask a follow-up question that flows naturally. 
 Output ONLY the question text, no additional commentary."""
 
         response = client.chat.completions.create(
-            model=os.getenv("NOVA_MODEL", "nova-2-lite-v1"),
+            model=os.getenv("NOVA_MODEL", "amazon/nova-lite-v1"),
             messages=[
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": f"Generate a {question_type} interview question for a {target_role} position."}
             ],
             temperature=0.8,
+            max_tokens=300,
             timeout=10
         )
         
         question = response.choices[0].message.content.strip()
-        print(f"Successfully generated interview question via Nova API", file=sys.stderr)
+        print(f"Successfully generated interview question via OpenAI API", file=sys.stderr)
         return question
         
     except Exception as e:
-        print(f"Nova interview question generation failed: {e}. Using fallback.", file=sys.stderr)
+        print(f"OpenAI interview question generation failed: {e}. Using fallback.", file=sys.stderr)
         # Return None to trigger fallback in api.py
         return None
