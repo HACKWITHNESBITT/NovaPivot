@@ -20,13 +20,15 @@ const authRoutes = require('./routes/auth');
 // Initialize express app
 const app = express();
 
-// Connect to database
-console.log('PORT from env:', process.env.PORT);
-const PORT = process.env.PORT || 5002;
-console.log('Final PORT:', PORT);
+// Connect to database (only once in serverless environment)
+let isConnected = false;
 
-connectDB();
-console.log('MongoDB connection completed');
+const connectToDatabase = async () => {
+  if (!isConnected) {
+    await connectDB();
+    isConnected = true;
+  }
+};
 
 // Security middleware
 console.log('Setting up middleware');
@@ -41,11 +43,28 @@ app.use(cors({
     'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:3002',
-    'http://localhost:5173',
-    'https://novapivot.vercel.app',
-    'https://nova-pivot.vercel.app',
-    'https://novapivot-career-transition-platform.vercel.app'
-  ].filter(Boolean),
+    'http://localhost:3003',
+    'http://localhost:3004',
+    'http://localhost:3005',
+    'http://localhost:3006',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+    'http://127.0.0.1:3002',
+    'http://127.0.0.1:3003',
+    'http://127.0.0.1:3004',
+    'http://127.0.0.1:3005',
+    'http://127.0.0.1:3006',
+    'http://192.168.1.9:3000',
+    'http://192.168.1.9:3001',
+    'http://192.168.1.9:3002',
+    'http://192.168.1.9:3003',
+    'http://192.168.1.9:3004',
+    'http://192.168.1.9:3005',
+    'http://192.168.1.9:3006',
+    // Vercel deployment
+    'https://*.vercel.app',
+    process.env.FRONTEND_URL
+  ].filter(Boolean), // Filter out undefined values
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -166,28 +185,5 @@ app.use((error, req, res, next) => {
   });
 });
 
-// Start server
-console.log('Starting server on port', PORT);
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Auth Server running on port ${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-}).on('error', (err) => {
-  console.error('Server listen error:', err);
-  process.exit(1);
-});
-
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err, promise) => {
-  console.error('Unhandled Promise Rejection:', err);
-  // Close server & exit process
-  server.close(() => {
-    process.exit(1);
-  });
-});
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
-  process.exit(1);
-});
+// Export the Express app for Vercel (serverless function)
+module.exports = app;
