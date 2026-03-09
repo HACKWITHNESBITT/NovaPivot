@@ -2,11 +2,11 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
-  name: {
+  fullName: {
     type: String,
-    required: [true, 'Name is required'],
+    required: [true, 'Full name is required'],
     trim: true,
-    maxlength: [50, 'Name cannot exceed 50 characters']
+    maxlength: [50, 'Full name cannot exceed 50 characters']
   },
   email: {
     type: String,
@@ -130,7 +130,7 @@ userSchema.methods.resetLoginAttempts = function() {
 userSchema.methods.toPublicJSON = function() {
   return {
     id: this._id,
-    name: this.name,
+    fullName: this.fullName,
     email: this.email,
     avatar: this.avatar,
     isEmailVerified: this.isEmailVerified,
