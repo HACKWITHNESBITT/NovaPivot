@@ -54,7 +54,7 @@ def render_interview_controls():
             )
 
             feedback_response = client.chat.completions.create(
-                model=os.getenv("NOVA_MODEL", "nova-2-lite-v1"),
+                model=os.getenv("NOVA_MODEL", "amazon/nova-lite-v1"),
                 messages=[{"role": "user", "content": feedback_prompt + transcript}],
             )
             st.session_state.interview_feedback = feedback_response.choices[0].message.content
@@ -122,7 +122,7 @@ def get_interviewer_response(messages):
         api_messages = [{"role": "system", "content": system_role}] + messages
         
         response = client.chat.completions.create(
-            model=os.getenv("NOVA_MODEL", "nova-2-lite-v1"),
+            model=os.getenv("NOVA_MODEL", "amazon/nova-lite-v1"),
             messages=api_messages,
             temperature=0.8,
             timeout=8
