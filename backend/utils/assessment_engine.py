@@ -196,7 +196,7 @@ Format your response as JSON:
 }}"""
 
         response = client.chat.completions.create(
-            model=os.getenv("NOVA_MODEL", "amazon.nova-lite-v1:0"),
+            model=os.getenv("NOVA_MODEL", "amazon/nova-lite-v1"),
             messages=[
                 {"role": "system", "content": ASSESSMENT_SYSTEM_PROMPT},
                 {"role": "user", "content": user_prompt}
@@ -324,7 +324,7 @@ Format as JSON:
 }}"""
 
         response = client.chat.completions.create(
-            model=os.getenv("NOVA_MODEL", "amazon.nova-lite-v1:0"),
+            model=os.getenv("NOVA_MODEL", "amazon/nova-lite-v1"),
             messages=[
                 {"role": "system", "content": ASSESSMENT_SYSTEM_PROMPT},
                 {"role": "user", "content": user_prompt}
