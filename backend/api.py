@@ -18,7 +18,18 @@ from utils.resume_parser import parse_resume
 from utils.job_scraper import get_jobs
 from utils.roadmap_generator import generate_roadmap
 
+# Authentication imports
+from models.User import User
+from bson import ObjectId
+import jwt
+from datetime import datetime, timedelta
+import secrets
+
 load_dotenv()
+
+def generate_token(user_id):
+    payload = {'user_id': user_id, 'exp': datetime.utcnow() + timedelta(hours=24)}
+    return jwt.encode(payload, os.getenv('JWT_SECRET'), algorithm='HS256')
 
 app = FastAPI(
     title="NovaPivot AI API",
@@ -653,6 +664,56 @@ def generate_detailed_roadmap(request: dict):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate detailed roadmap: {str(e)}")
+
+
+# Authentication Endpoints
+
+@app.post("/api/auth/register")
+def register(request: dict):
+    email = request.get('email')
+    password = request.get('password')
+    name = request.get('name', '')
+    if not email or not password:
+        raise HTTPException(status_code=400, detail="Email and password required")
+    if User.find_by_email(email):
+        raise HTTPException(status_code=409, detail="User already exists")
+    user_id = User.create(email, password, name)
+    token = generate_token(user_id)
+    user = User.find_by_email(email)
+    return {"success": True, "token": token, "user": User.to_public_json(user)}
+
+@app.post("/api/auth/login")
+def login(request: dict):
+    email = request.get('email')
+    password = request.get('password')
+    user = User.find_by_email(email)
+    if not user or not bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    token = generate_token(str(user['_id']))
+    return {"success": True, "token": token, "user": User.to_public_json(user)}
+
+@app.post("/api/auth/forgot-password")
+def forgot_password(request: dict):
+    email = request.get('email')
+    user = User.find_by_email(email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    token = secrets.token_urlsafe(32)
+    expiry = datetime.utcnow() + timedelta(hours=1)
+    User.update_reset_token(email, token, expiry)
+    # Simulate email
+    return {"success": True, "message": "Reset email sent"}
+
+@app.post("/api/auth/reset-password")
+def reset_password(request: dict):
+    token = request.get('token')
+    new_password = request.get('new_password')
+    user = User.find_by_reset_token(token)
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid or expired token")
+    hashed = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    User.update_password(str(user['_id']), hashed)
+    return {"success": True, "message": "Password reset successful"}
 
 
 if __name__ == "__main__":
