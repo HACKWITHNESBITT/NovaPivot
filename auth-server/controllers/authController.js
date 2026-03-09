@@ -210,7 +210,8 @@ const forgotPassword = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Password reset link sent to your email'
+      message: 'Password reset link generated',
+      resetLink: `${process.env.FRONTEND_URL}/reset-password/${resetToken}`
     });
 
   } catch (error) {
