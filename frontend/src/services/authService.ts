@@ -1,5 +1,5 @@
-// API base URL for auth server
-const AUTH_API_URL = 'http://localhost:5002/api/auth';
+// API base URL for auth server - use environment variable for production
+const AUTH_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002/api/auth';
 
 // Types
 export interface User {
@@ -71,7 +71,7 @@ class AuthService {
     } catch (error) {
       if (error instanceof TypeError) {
         // Network error — server unreachable
-        throw new Error('Cannot connect to auth server. Please ensure the auth server is running on port 5002.');
+        throw new Error('Cannot connect to auth server. Please ensure the auth server is running.');
       }
       // Server returned an error (e.g. email already exists)
       throw error;
@@ -100,7 +100,7 @@ class AuthService {
     } catch (error) {
       if (error instanceof TypeError) {
         // Network error — server unreachable
-        throw new Error('Cannot connect to auth server. Please ensure the auth server is running on port 5002.');
+        throw new Error('Cannot connect to auth server. Please ensure the auth server is running.');
       }
       // Server returned an error (e.g. wrong credentials)
       throw error;
