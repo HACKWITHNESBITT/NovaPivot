@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 // API base URL for auth server - use environment variable for production
 const AUTH_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002/api/auth';
 

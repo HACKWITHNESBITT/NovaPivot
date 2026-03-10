@@ -1,6 +1,6 @@
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || `http://${window.location.hostname}:8000`
 
-import type { DetailedRoadmap, RoadmapPhase } from '../types/roadmap'
+import type { DetailedRoadmap } from '../types/roadmap'
 
 /**
  * Generate a detailed, role-specific roadmap with phases and documentation

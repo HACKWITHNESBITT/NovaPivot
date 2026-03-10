@@ -16,12 +16,13 @@ import { generateAssessment, submitAssessment, completeTopic, storeAttempt } fro
 import type { Topic, AssessmentQuestion, AssessmentEvaluation } from '../types/certification'
 
 interface AssessmentModalProps {
-  questions: AssessmentQuestion[]
-  onSubmit: (answers: string[]) => void
-  onClose: () => void
+  topic: Topic;
+  questions: AssessmentQuestion[];
+  onSubmit: (answers: string[]) => Promise<void>;
+  onClose: () => void;
 }
 
-function AssessmentModal({ questions, onSubmit, onClose }: AssessmentModalProps) {
+function AssessmentModal({ topic, questions, onSubmit, onClose }: AssessmentModalProps) {
   const [answers, setAnswers] = useState<string[]>(new Array(questions.length).fill(''))
   const [currentQuestion, setCurrentQuestion] = useState(0)
 
@@ -135,7 +136,7 @@ interface ResultsModalProps {
   onClose: () => void
 }
 
-function ResultsModal({ evaluation, topic, onRetry, onContinue, onClose }: ResultsModalProps) {
+function ResultsModal({ evaluation, onRetry, onContinue, onClose }: ResultsModalProps) {
   const passed = evaluation.status === 'passed'
 
   return (
@@ -253,7 +254,6 @@ export default function CertificationRoadmapPage() {
     questions: AssessmentQuestion[]
   } | null>(null)
   const [assessmentResults, setAssessmentResults] = useState<AssessmentEvaluation | null>(null)
-  const [submitting, setSubmitting] = useState(false)
 
   // Generate initial topics from roadmap data
   useEffect(() => {
@@ -346,7 +346,6 @@ export default function CertificationRoadmapPage() {
   const handleSubmitAssessment = async (answers: string[]) => {
     if (!activeAssessment) return
 
-    setSubmitting(true)
     try {
       const evaluation = await submitAssessment({
         topicId: activeAssessment.topic.id,
@@ -365,8 +364,6 @@ export default function CertificationRoadmapPage() {
     } catch (error) {
       console.error('Failed to submit assessment:', error)
       alert('Failed to submit assessment. Please try again.')
-    } finally {
-      setSubmitting(false)
     }
   }
 
@@ -385,7 +382,7 @@ export default function CertificationRoadmapPage() {
       )
 
       // Update local state - mark current as completed and unlock next
-      setTopics(prev => prev.map((t, idx) => {
+      setTopics(prev => prev.map((t) => {
         if (t.id === currentTopic.id) {
           return { ...t, isCompleted: true, score: assessmentResults.percentage }
         }
