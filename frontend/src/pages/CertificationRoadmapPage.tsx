@@ -13,7 +13,15 @@ import {
   FileQuestion
 } from 'lucide-react'
 import { generateAssessment, submitAssessment, completeTopic, storeAttempt } from '../services/certificationApi'
-import type { Topic, AssessmentQuestion, AssessmentEvaluation } from '../types/certification'
+import type { Topic, AssessmentEvaluation } from '../types/certification'
+
+interface AssessmentQuestion {
+  id: number;
+  type: string;
+  difficulty: string;
+  question: string;
+  expectedCriteria: string[];
+}
 
 interface AssessmentModalProps {
   topic: Topic;
@@ -130,7 +138,6 @@ function AssessmentModal({ topic, questions, onSubmit, onClose }: AssessmentModa
 
 interface ResultsModalProps {
   evaluation: AssessmentEvaluation
-  topic: Topic
   onRetry: () => void
   onContinue: () => void
   onClose: () => void
@@ -592,7 +599,6 @@ export default function CertificationRoadmapPage() {
       {assessmentResults && activeAssessment && (
         <ResultsModal
           evaluation={assessmentResults}
-          topic={activeAssessment.topic}
           onRetry={handleRetry}
           onContinue={handlePassComplete}
           onClose={() => setAssessmentResults(null)}
