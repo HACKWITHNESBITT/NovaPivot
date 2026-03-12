@@ -90,7 +90,7 @@ def process_query(query, user_profile):
         if resume_text:
             prompt += f"\n\nResume Summary:\n{resume_text[:500]}..."
 
-        # Chat Completion with Nova API
+        # Chat Completion with Nova API (OpenAI compatible)
         response = client.chat.completions.create(
             model=os.getenv("NOVA_MODEL", "amazon/nova-lite-v1"),
             messages=[
@@ -104,19 +104,18 @@ def process_query(query, user_profile):
         
         content = response.choices[0].message.content
         if not content or content.strip() == "":
-            raise ValueError("Empty response from OpenAI API")
+            raise ValueError("Empty response from API")
             
         return content
 
     except Exception as e:
         error_msg = str(e)
-        print(f"OpenAI API Error: {error_msg}", file=sys.stderr)
-        # Log the error and return a mock fallback message
-        return mock_process_query(query, user_profile)
+        print(f"API Error: {error_msg}", file=sys.stderr)
+        return f"API ERROR: {error_msg}"
 
 def extract_skills_with_llm(text):
     """
-    Uses the LLM to pull out structured skill names, with keyword fallback.
+    Uses the LLM to pull out structured skill names. No mock local fallback.
     """
     try:
         print(f"Extracting skills using Nova API...", file=sys.stderr)
@@ -131,22 +130,25 @@ def extract_skills_with_llm(text):
             timeout=10
         )
         skills_text = response.choices[0].message.content
+        if not skills_text or skills_text.strip() == "":
+            raise ValueError("Empty response from API during skill extraction.")
+
         skills = [s.strip() for s in skills_text.split(",") if s.strip()]
-        print(f"Successfully extracted {len(skills)} skills via OpenAI API", file=sys.stderr)
+        print(f"Successfully extracted {len(skills)} skills via API", file=sys.stderr)
         return skills
     except Exception as e:
-        print(f"OpenAI skill extraction failed: {e}. Using local fallback.", file=sys.stderr)
-        # Fallback to local extraction if API fails
-        return local_skill_extractor(text)
+        error_msg = str(e)
+        print(f"Skill extraction API failed: {error_msg}.", file=sys.stderr)
+        raise e
 
 
 def generate_interview_question(target_role: str, question_type: str = "technical", conversation_history: str = "", user_skills: str = ""):
     """
     Generates a contextual interview question using OpenAI API.
-    Falls back to static questions if API fails.
+    Does not use static fallbacks if API fails.
     """
     try:
-        print(f"Generating {question_type} interview question for {target_role} using OpenAI API...", file=sys.stderr)
+        print(f"Generating {question_type} interview question for {target_role} using Nova API...", file=sys.stderr)
         
         # Build context from user skills and conversation
         context = ""
@@ -184,10 +186,10 @@ Output ONLY the question text, no additional commentary."""
         )
         
         question = response.choices[0].message.content.strip()
-        print(f"Successfully generated interview question via OpenAI API", file=sys.stderr)
+        print(f"Successfully generated interview question via API", file=sys.stderr)
         return question
         
     except Exception as e:
-        print(f"OpenAI interview question generation failed: {e}. Using fallback.", file=sys.stderr)
-        # Return None to trigger fallback in api.py
-        return None
+        error_msg = str(e)
+        print(f"API interview question generation failed: {error_msg}.", file=sys.stderr)
+        raise e

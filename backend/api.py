@@ -137,7 +137,8 @@ async def upload_resume(file: UploadFile = File(...), target_role: Optional[str]
         skills = extract_skills_with_llm(resume_text)
         
         if not skills:
-            skills = local_skill_extractor(resume_text)
+            # Removed local skill extractor fallback so it enforces real API responses
+            skills = []
         
         # Generate detailed feedback message
         target_display = target_role if target_role else "your goal role"

@@ -167,10 +167,16 @@ class AuthService {
         body: JSON.stringify({ email }),
       });
 
-      return await response.json();
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.message || 'Password reset request failed');
+      }
+      return result;
     } catch (error) {
-      console.error('Forgot password error:', error);
-      throw new Error('Network error during password reset request');
+      if (error instanceof TypeError) {
+        throw new Error('Network error during password reset request');
+      }
+      throw error;
     }
   }
 

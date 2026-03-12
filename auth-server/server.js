@@ -2,9 +2,6 @@ console.log('Starting server.js');
 require('dotenv').config();
 console.log('Loading dotenv');
 
-process.env.JWT_SECRET = 'your-secure-jwt-secret-here';
-process.env.MONGODB_URI = 'mongodb://127.0.0.1:27017/novapivot_auth';
-
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -47,6 +44,8 @@ app.use(cors({
     'http://localhost:3004',
     'http://localhost:3005',
     'http://localhost:3006',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
     'http://127.0.0.1:3000',
     'http://127.0.0.1:3001',
     'http://127.0.0.1:3002',
@@ -61,6 +60,7 @@ app.use(cors({
     'http://192.168.1.9:3004',
     'http://192.168.1.9:3005',
     'http://192.168.1.9:3006',
+    'http://192.168.1.9:5173',
     // Vercel deployment
     'https://*.vercel.app',
     process.env.FRONTEND_URL
@@ -187,3 +187,18 @@ app.use((error, req, res, next) => {
 
 // Export the Express app for Vercel (serverless function)
 module.exports = app;
+
+// Start server locally (not in Vercel/serverless environment)
+if (process.env.NODE_ENV !== 'production' || require.main === module) {
+  const PORT = process.env.PORT || 5002;
+  connectToDatabase().then(() => {
+    app.listen(PORT, () => {
+      console.log(`✅ Auth server running on http://localhost:${PORT}`);
+      console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`   Frontend URL: ${process.env.FRONTEND_URL}`);
+    });
+  }).catch(err => {
+    console.error('❌ Failed to connect to database:', err);
+    process.exit(1);
+  });
+}

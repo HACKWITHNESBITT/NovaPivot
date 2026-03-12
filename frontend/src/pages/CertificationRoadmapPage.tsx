@@ -13,15 +13,7 @@ import {
   FileQuestion
 } from 'lucide-react'
 import { generateAssessment, submitAssessment, completeTopic, storeAttempt } from '../services/certificationApi'
-import type { Topic, AssessmentEvaluation } from '../types/certification'
-
-interface AssessmentQuestion {
-  id: number;
-  type: string;
-  difficulty: string;
-  question: string;
-  expectedCriteria: string[];
-}
+import type { Topic, AssessmentQuestion, AssessmentEvaluation } from '../types/certification'
 
 interface AssessmentModalProps {
   topic: Topic;
